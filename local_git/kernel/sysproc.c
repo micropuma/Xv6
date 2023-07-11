@@ -6,8 +6,12 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
 
-uint64
+extern int proccount(void);
+extern int memcount(void); 
+
+uint64 
 sys_exit(void)
 {
   int n;
@@ -95,3 +99,39 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// used for systrace syscall
+uint64
+sys_trace(void)
+{
+  int n;
+
+  if(argint(0, &n) < 0)
+    return -1;
+
+  myproc()->tmask = n;
+  return 0;
+}
+
+// used for sysinfo
+uint64 
+sys_sysinfo(void)
+{
+  struct sysinfo sysinfo;
+
+  // Get the arg virtual address, when sysinfo get updated
+  // need to copy out there.
+  uint64 sysinfoAddr;
+  if(argaddr(0, &sysinfoAddr) != 0)
+	  return -1;
+  sysinfo.freemem = memcount();
+  sysinfo.nproc = proccount();	  
+
+  struct proc *p = myproc();
+  if((copyout(p->pagetable, sysinfoAddr, (char *)&sysinfo, sizeof(sysinfo))) < 0)
+		  return -1;
+
+  return 0;
+}
+
+

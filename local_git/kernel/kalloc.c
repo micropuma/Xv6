@@ -74,9 +74,27 @@ kalloc(void)
   r = kmem.freelist;
   if(r)
     kmem.freelist = r->next;
-  release(&kmem.lock);
+ release(&kmem.lock);
 
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
+}
+
+// Used for sysinfo syscall.
+// Returns how many bytes that are free to use.
+int memcount()
+{
+  acquire(&kmem.lock);
+  struct run *r;
+  r = kmem.freelist;
+  int count = 0;
+  while(r)
+  {
+	  r = r->next;
+	  count ++;
+  }
+
+  release(&kmem.lock);
+  return count * PGSIZE;
 }

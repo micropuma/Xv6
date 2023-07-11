@@ -274,6 +274,7 @@ fork(void)
     return -1;
   }
   np->sz = p->sz;
+  np->tmask = p->tmask;
 
   np->parent = p;
 
@@ -694,3 +695,18 @@ procdump(void)
   }
 }
 
+// Used for sysinfo syscall.
+// Count how many process are able to use.
+int 
+proccount(void) {
+  int count = 0;
+  for(int i = 0; i < NPROC; i++)
+  {
+	  if(proc[i].state != UNUSED)
+	  {
+		  count ++;
+	  }
+  }
+
+  return count;
+}
